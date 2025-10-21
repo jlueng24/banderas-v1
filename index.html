@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Diversión con banderas — v2</title>
+  <meta name="theme-color" content="#0ea5e9" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html,body{height:100%}
+    .app-frame{min-height:100dvh}
+    .hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+    .banner{background:repeating-linear-gradient(45deg,#fef9c3,#fef9c3 12px,#fde68a 12px,#fde68a 24px)}
+
+    @keyframes pop{0%{transform:scale(.96);opacity:0}60%{transform:scale(1.02);opacity:1}100%{transform:scale(1)}}
+    .pop{animation:pop 260ms ease-out}
+    .shadow-candy{box-shadow:0 10px 20px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.6)}
+    .answer-btn{transition:transform .06s ease,box-shadow .12s ease}
+    .answer-btn:active{transform:translateY(1px) scale(.99)}
+    .flag-img{object-fit:contain;object-position:center;background:#fff}
+    .confetti{position:fixed;top:0;left:0;width:100%;height:0;pointer-events:none;overflow:visible}
+    .confetti span{position:absolute;top:-10px;font-size:22px;animation:fall linear forwards}
+    @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+    .screen{display:none}
+    .screen.active{display:block}
+    .tab-btn.active{background:#0ea5e9;color:white}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .icon-wrap{width:72px;height:48px}
+  </style>
+</head>
+<body class="bg-gradient-to-b from-sky-50 via-rose-50 to-amber-50 text-slate-800">
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b app-chrome">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🏁</span>
+        <h1 class="text-lg sm:text-xl font-extrabold">Diversión con banderas</h1>
+        <span id="modeBadge" class="ml-2 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-semibold banner">
+          <span>🧪</span> <span>Modo simulado (offline local)</span>
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnFullscreen" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">Pantalla completa</button>
+        <button id="btnInstall" class="px-3 py-1.5 rounded-xl bg-slate-200 text-slate-500 text-sm font-semibold cursor-not-allowed" title="En local no se puede instalar">Instalar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-3 sm:p-6 app-frame">
+    <div class="rounded-3xl bg-white/80 backdrop-blur shadow p-3 sm:p-6">
+      <div id="APP" class="hide-scrollbar" style="max-height: calc(100dvh - 140px); overflow:auto;">
+
+        <div class="max-w-5xl mx-auto p-4 sm:p-6">
+          <header class="flex items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-3">
+              <h1 class="text-2xl sm:text-3xl font-black tracking-tight">
+                🎉 <span class="text-sky-700">Diversión</span> con <span class="text-amber-600">banderas</span>
+                <span class="sr-only align-middle">· Liga & Estadísticas</span>
+              </h1>
+              <span class="sr-only">v multipantalla</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="btnLeague" class="px-3 py-2 rounded-xl bg-white/80 hover:bg-white shadow-candy text-sm font-semibold">🏆 Liga</button>
+              <button id="btnStats" class="px-3 py-2 rounded-xl bg-white/80 hover:bg-white shadow-candy text-sm font-semibold">📊 Estadísticas</button>
+              <button id="helpBtn" class="px-3 py-2 rounded-xl bg-white/80 hover:bg-white shadow-candy text-sm font-semibold">❓ Ayuda</button>
+            </div>
+          </header>
+
+          <!-- Pantalla 0: Jugador -->
+          <section id="screen-player" class="screen active bg-white/80 backdrop-blur rounded-3xl shadow-candy p-6 pop">
+            <h2 class="text-xl font-black mb-2">👤 Elige tu nombre</h2>
+            <p class="text-sm text-slate-600 mb-4">Se usará para el ranking local y la liga semanal.</p>
+            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+              <div class="grow">
+                <label class="block text-xs font-semibold text-slate-500 mb-1">Nombre del jugador</label>
+                <input id="playerName" class="w-full px-4 py-3 rounded-2xl border bg-white" placeholder="Ej.: Marta, Lucas, Profe..." />
+              </div>
+              <button id="goToMode" class="px-4 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">Continuar ➜</button>
+            </div>
+            <div class="mt-4 text-xs text-slate-500">Consejo: puedes cambiar tu nombre más tarde desde la liga.</div>
+          </section>
+
+          <!-- Pantalla 1: Modo (incluye Reto del día) -->
+          <section id="screen-mode" class="screen bg-white/80 backdrop-blur rounded-3xl shadow-candy p-6 pop">
+            <h2 class="text-xl font-black mb-4">1) Elige el modo</h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Banderas -->
+              <button data-mode="flags" class="mode-btn px-4 py-6 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-left shadow-candy">
+                <div class="mb-3">
+                  <svg viewBox="0 0 72 48" class="icon-wrap rounded-md border border-amber-200">
+                    <defs>
+                      <linearGradient id="juniperGreen" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#22c55e"/>
+                        <stop offset="100%" stop-color="#15803d"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="72" height="48" fill="#FDE047"></rect>
+                    <path d="M2,14 C14,12 18,14 26,18 S46,26 70,24" fill="none" stroke="#2563EB" stroke-width="3" opacity="0.95"/>
+                    <path d="M2,22 C14,20 18,22 26,26 S46,34 70,32" fill="none" stroke="#2563EB" stroke-width="3" opacity="0.95"/>
+                    <rect x="6" y="18" width="2.4" height="14" fill="#92400E" />
+                    <circle cx="10" cy="20" r="5" fill="url(#juniperGreen)"/>
+                    <circle cx="6" cy="26" r="6" fill="url(#juniperGreen)"/>
+                    <circle cx="12" cy="30" r="6" fill="url(#juniperGreen)"/>
+                    <circle cx="60" cy="12" r="4" fill="#1d4ed8"/>
+                    <circle cx="66" cy="18" r="4" fill="#1d4ed8"/>
+                  </svg>
+                </div>
+                <div class="text-lg font-extrabold">Banderas del mundo</div>
+                <p class="text-sm text-slate-600">Adivina el país por su bandera.</p>
+              </button>
+
+              <!-- Capitales -->
+              <button data-mode="capitals" class="mode-btn px-4 py-6 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left shadow-candy">
+                <div class="mb-3">
+                  <svg viewBox="0 0 72 48" class="icon-wrap">
+                    <rect width="72" height="48" fill="transparent"></rect>
+                    <g fill="#0EA5E9" stroke="#0369A1" stroke-width="1.5">
+                      <polygon points="36,6 28,24 44,24" />
+                      <rect x="33" y="6" width="6" height="6" />
+                      <rect x="24" y="24" width="24" height="4" />
+                      <rect x="20" y="32" width="32" height="4" />
+                      <rect x="16" y="40" width="40" height="4" />
+                    </g>
+                  </svg>
+                </div>
+                <div class="text-lg font-extrabold">Capitales del mundo</div>
+                <p class="text-sm text-slate-600">Di a qué país pertenece la capital.</p>
+              </button>
+
+              <!-- Mixto -->
+              <button data-mode="mixed" class="mode-btn px-4 py-6 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-100 text-left shadow-candy">
+                <div class="mb-3 flex items-center gap-3">
+                  <span class="text-6xl leading-none">🏁</span>
+                  <span class="text-6xl leading-none">🗽</span>
+                </div>
+                <div class="text-lg font-extrabold">Mixto</div>
+                <p class="text-sm text-slate-600">Mezcla de banderas y capitales.</p>
+              </button>
+
+              <!-- Reto del día -->
+              <button id="tile-daily" data-mode="daily" class="mode-btn px-4 py-6 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-100 text-left shadow-candy">
+                <div class="mb-3">
+                  <span class="text-6xl leading-none">🎯</span>
+                </div>
+                <div class="text-lg font-extrabold">Reto del día</div>
+                <p class="text-sm text-slate-600">Una única pregunta diaria.</p>
+              </button>
+            </div>
+            <div class="mt-6">
+              <button id="backToPlayer" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">⬅ Jugador</button>
+              <button id="toLevel" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">Siguiente ➜</button>
+            </div>
+          </section>
+
+          <!-- Pantalla 2: Dificultad -->
+          <section id="screen-level" class="screen bg-white/80 backdrop-blur rounded-3xl shadow-candy p-6 pop">
+            <h2 class="text-xl font-black mb-2">2) Elige la dificultad</h2>
+            <p class="text-sm text-slate-600 mb-4">Niños: 15s · Adultos: 12s · Máster: 8s (fallo: −5).</p>
+            <div class="grid sm:grid-cols-3 gap-4">
+              <button data-level="kids" class="level-btn px-4 py-6 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-100 text-left shadow-candy">
+                <div class="text-2xl mb-2">🧒</div>
+                <div class="font-extrabold">Niños</div>
+                <p class="text-sm text-slate-600">Más tiempo, sin penalización.</p>
+              </button>
+              <button data-level="adult" class="level-btn px-4 py-6 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 text-left shadow-candy">
+                <div class="text-2xl mb-2">🧑</div>
+                <div class="font-extrabold">Adultos</div>
+                <p class="text-sm text-slate-600">Equilibrado.</p>
+              </button>
+              <button data-level="master" class="level-btn px-4 py-6 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-100 text-left shadow-candy">
+                <div class="text-2xl mb-2">🧠</div>
+                <div class="font-extrabold">Máster</div>
+                <p class="text-sm text-slate-600">Rápido y con penalización.</p>
+              </button>
+            </div>
+            <div class="mt-6 flex gap-2">
+              <button id="backToMode" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">⬅ Volver</button>
+              <button id="goToGame" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">Ir a jugar ➜</button>
+            </div>
+          </section>
+
+          <!-- Pantalla 3: Juego -->
+          <section id="screen-game" class="screen bg-white/80 backdrop-blur rounded-3xl shadow-candy p-4 sm:p-6 pop">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div class="w-full">
+                <div class="flex items-center justify-between text-xs font-semibold mb-1">
+                  <span>Jugador: <span id="uiPlayer">—</span> · <span id="modeLabel">—</span> · <span id="levelLabel">—</span> · Pregunta <span id="qNumber">0</span>/10</span>
+                  <span>Puntos: <span id="points">0</span></span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-400 to-sky-500" style="width:0%"></div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-xs sm:text-sm font-semibold">⏳ Tiempo</div>
+                <div class="w-36 sm:w-44">
+                  <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="timeBar" class="h-full bg-gradient-to-r from-rose-500 to-amber-400" style="width:100%"></div>
+                  </div>
+                  <div class="text-center text-xs mt-1 font-bold" aria-live="polite"><span id="timeLeft">0</span>s</div>
+                </div>
+                <div class="flex items-center gap-2 text-xs sm:text-sm">
+                  ✅ <span id="hits">0</span><span class="opacity-40">·</span>❌ <span id="misses">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Carta banderas -->
+            <div id="card-flag" class="grid sm:grid-cols-2 gap-6 items-stretch">
+              <div class="bg-amber-50 rounded-2xl border border-amber-100 p-4 sm:p-6 flex flex-col items-center justify-center text-center shadow-candy">
+                <div class="text-xs uppercase tracking-widest text-amber-700/70 font-bold mb-2">¿De qué país es esta bandera?</div>
+                <div class="w-full aspect-video max-h-64 overflow-hidden rounded-xl border border-amber-200 bg-white grid place-items-center">
+                  <img id="flagImg" alt="Bandera del país a adivinar" class="flag-img w-full h-full select-none" src="" />
+                </div>
+              </div>
+              <div class="grid grid-cols-1 gap-3">
+                <button class="answer-btn px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="0"></button>
+                <button class="answer-btn px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="1"></button>
+                <button class="answer-btn px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="2"></button>
+                <button class="answer-btn px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="3"></button>
+                <div class="flex items-center justify-between mt-2">
+                  <div class="flex gap-2">
+                    <button id="pauseBtn" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">⏸ Pausa</button>
+                    <button id="exitBtn" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">🚪 Salir</button>
+                    <button id="restartBtn" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">Reiniciar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Carta capitales -->
+            <div id="card-capital" class="grid sm:grid-cols-2 gap-6 items-stretch hidden">
+              <div class="bg-amber-50 rounded-2xl border border-amber-100 p-4 sm:p-6 flex flex-col items-center justify-center text-center shadow-candy">
+                <div class="text-xs uppercase tracking-widest text-amber-700/70 font-bold mb-2">¿De qué país es esta capital?</div>
+                <div class="w-full aspect-video max-h-64 overflow-hidden rounded-xl border border-amber-200 bg-white grid place-items-center">
+                  <div class="text-3xl sm:text-4xl font-black text-amber-700 px-4" id="capitalName">—</div>
+                </div>
+                <div class="mt-3 flex items-center gap-3">
+                  <img id="flagImgReveal" class="flag-img w-14 h-10 rounded border hidden" alt="Bandera del país correcto" />
+                  <span id="countryReveal" class="text-sm font-semibold text-emerald-700 hidden"></span>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 gap-3">
+                <button class="answer-btn cap px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="0"></button>
+                <button class="answer-btn cap px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="1"></button>
+                <button class="answer-btn cap px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="2"></button>
+                <button class="answer-btn cap px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-100 text-left font-bold" data-index="3"></button>
+                <div class="flex items-center justify-between mt-2">
+                  <div class="flex gap-2">
+                    <button id="pauseBtn2" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">⏸ Pausa</button>
+                    <button id="exitBtn2" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">🚪 Salir</button>
+                    <button id="restartBtn2" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">Reiniciar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Final -->
+          <section id="finalCard" class="screen bg-white/90 backdrop-blur rounded-3xl shadow-candy p-6">
+            <h2 class="text-xl sm:text-2xl font-black mb-2">🎉 ¡Fin de la partida!</h2>
+            <p class="mb-4 text-slate-700">Has conseguido <span id="finalPoints" class="font-extrabold text-emerald-600">0</span> puntos con <span id="finalHits" class="font-extrabold">0</span> aciertos y <span id="finalMisses" class="font-extrabold">0</span> fallos.</p>
+            <div class="flex flex-wrap gap-2">
+              <button id="playAgainBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">Jugar otra vez</button>
+              <button id="goHomeBtn" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">Volver al inicio</button>
+              <button id="shareResult" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold">Compartir puntuación</button>
+            </div>
+          </section>
+
+          <!-- Modal Ayuda -->
+          <dialog id="helpModal" role="dialog" aria-modal="true" class="rounded-3xl p-0 w-[min(95vw,40rem)] shadow-candy backdrop:bg-black/40">
+            <div class="bg-white rounded-3xl overflow-hidden">
+              <div class="p-5 sm:p-6">
+                <h3 class="text-xl font-black mb-3">Cómo jugar</h3>
+                <ul class="list-disc pl-5 space-y-1 text-slate-700 text-sm">
+                  <li>Elige tu <strong>nombre</strong>, el <strong>modo</strong> (banderas/capitales/mixto) y la <strong>dificultad</strong>.</li>
+                  <li>10 preguntas por partida. Acierto = +10; en <strong>Máster</strong>, fallo = −5.</li>
+                  <li>Usa <strong>Pausa</strong> para detener el tiempo y <strong>Salir</strong> para volver al menú de modos.</li>
+                  <li>La <strong>liga semanal</strong> guarda tus mejores puntuaciones por semana (local en este dispositivo).</li>
+                  <li>En <strong>Estadísticas</strong> verás tus tiempos medios, países más fallados y progreso.</li>
+                  <li>El <strong>reto del día</strong> aparece como un modo más y desaparece al completarlo hasta mañana.</li>
+                </ul>
+              </div>
+              <div class="bg-slate-50 p-4 flex justify-end gap-2">
+                <button id="closeHelp" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold">¡Entendido!</button>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Modal Liga -->
+          <dialog id="leagueModal" role="dialog" aria-modal="true" class="rounded-3xl p-0 w-[min(95vw,46rem)] shadow-candy backdrop:bg-black/40">
+            <div class="bg-white rounded-3xl overflow-hidden">
+              <div class="p-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xl font-black">🏆 Liga semanal</h3>
+                  <button id="closeLeague" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Cerrar</button>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-4 mt-4">
+                  <div class="sm:col-span-2">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-semibold text-slate-600 text-sm">Semana actual: <span id="leagueWeek" class="font-bold text-slate-800">—</span></div>
+                      <div class="text-xs text-slate-500">Mejor puntuación por jugador</div>
+                    </div>
+                    <div id="leagueTable" class="overflow-x-auto"></div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Jugador actual</label>
+                    <input id="leagueName" class="w-full px-3 py-2 rounded-xl border bg-white mb-2" />
+                    <div class="flex gap-2">
+                      <button id="saveLeagueName" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold">Guardar</button>
+                      <button id="resetLeague" class="px-3 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 text-sm font-semibold">Borrar datos</button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-2">Los datos se guardan <strong>solo en este dispositivo</strong> (localStorage).</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Modal Estadísticas -->
+          <dialog id="statsModal" role="dialog" aria-modal="true" class="rounded-3xl p-0 w-[min(95vw,46rem)] shadow-candy backdrop:bg-black/40">
+            <div class="bg-white rounded-3xl overflow-hidden">
+              <div class="p-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xl font-black">📊 Tus estadísticas</h3>
+                  <button id="closeStats" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Cerrar</button>
+                </div>
+                <div class="mt-4">
+                  <div class="flex gap-2 mb-3">
+                    <button data-tab="overview" class="tab-btn px-3 py-2 rounded-lg bg-slate-100 text-sm font-semibold active">Resumen</button>
+                    <button data-tab="mistakes" class="tab-btn px-3 py-2 rounded-lg bg-slate-100 text-sm font-semibold">Países más fallados</button>
+                    <button data-tab="times" class="tab-btn px-3 py-2 rounded-lg bg-slate-100 text-sm font-semibold">Tiempos</button>
+                  </div>
+                  <div id="statsContent" class="text-sm text-slate-700"></div>
+                </div>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Modal Reto del día -->
+          <dialog id="dailyModal" role="dialog" aria-modal="true" class="rounded-3xl p-0 w-[min(95vw,40rem)] shadow-candy backdrop:bg-black/40">
+            <div class="bg-white rounded-3xl overflow-hidden">
+              <div class="p-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xl font-black">🎯 Reto del día</h3>
+                  <button id="closeDaily" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200">Cerrar</button>
+                </div>
+                <p class="text-sm text-slate-600 mt-1"><strong>¿Serás capaz de superar el reto de hoy?</strong></p>
+                <div id="dailyQuestion" class="mt-4"></div>
+                <div id="dailyPrize" class="hidden mt-6 text-center">
+                  <div class="text-[72px] leading-none" id="dailyEmoji">⭐</div>
+                  <div class="mt-3 text-sm text-slate-700">¿Ya tienes ganas de saber el próximo reto? Tendrás que esperar a mañana para descubrirlo</div>
+                </div>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Modal Pausa -->
+          <dialog id="pauseModal" role="dialog" aria-modal="true" class="rounded-3xl p-0 w-[min(95vw,28rem)] shadow-candy backdrop:bg-black/40">
+            <div class="bg-white rounded-3xl overflow-hidden">
+              <div class="p-6">
+                <h3 class="text-xl font-black mb-2">⏸ Juego en pausa</h3>
+                <p class="text-sm text-slate-600">Puedes reanudar cuando quieras. El tiempo está detenido.</p>
+                <div class="mt-4 flex gap-2">
+                  <button id="resumeBtn" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold">▶ Reanudar</button>
+                  <button id="pauseExitBtn" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border font-semibold">🚪 Salir al menú</button>
+                </div>
+              </div>
+            </div>
+          </dialog>
+
+          <!-- Confeti -->
+          <div id="confetti" class="confetti"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="max-w-6xl mx-auto px-4 py-6 text-center text-xs text-slate-500">
+    Consejo: en móvil, usa “Añadir a pantalla de inicio” cuando lo subas a Internet. En local es solo simulación.
+  </footer>
+
+  <!-- App principal -->
+  <script defer src="./app.js"></script>
+
+  <!-- Pantalla completa & PWA (igual que tu versión, con alguna defensa) -->
+  <script>
+    (function(){
+      const fs = document.documentElement;
+      document.getElementById('btnFullscreen').addEventListener('click', async () => {
+        try{ if (!document.fullscreenElement) await fs.requestFullscreen(); else await document.exitFullscreen(); }catch(e){ console.warn(e); }
+      });
+    })();
+
+    let deferredPrompt=null;
+    window.addEventListener('beforeinstallprompt',(e)=>{
+      e.preventDefault(); deferredPrompt=e;
+      const btn=document.getElementById('btnInstall');
+      btn.classList.remove('cursor-not-allowed','bg-slate-200','text-slate-500');
+      btn.classList.add('bg-emerald-500','hover:bg-emerald-600','text-white');
+      btn.title='Instalar aplicación';
+      btn.onclick=async()=>{ try{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; }catch{} }
+    });
+
+    (function setupPWA(){
+      const isFile = location.protocol === 'file:';
+      const modeBadge = document.getElementById('modeBadge');
+      const manifestLink = document.createElement('link');
+      manifestLink.rel='manifest';
+      document.head.appendChild(manifestLink);
+      if (isFile){
+        modeBadge.style.display='';
+        document.getElementById('btnInstall').disabled=true;
+        const fakeManifest={name:"Diversión con banderas",short_name:"Banderas",start_url:"./index.html",scope:"./",display:"standalone",background_color:"#ffffff",theme_color:"#0ea5e9",icons:[{src:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='512' height='512' fill='%230ea5e9'/><text x='50%' y='55%' font-size='280' text-anchor='middle' fill='white'>🏁</text></svg>",sizes:"512x512",type:"image/svg+xml"}]};
+        const blob=new Blob([JSON.stringify(fakeManifest)],{type:'application/manifest+json'});
+        manifestLink.href=URL.createObjectURL(blob);
+      } else {
+        modeBadge.style.display='none';
+        const manifest={name:"Diversión con banderas",short_name:"Banderas",description:"Juego de banderas y capitales. Modo offline y a pantalla completa.",start_url:"./index.html",scope:"./",display:"standalone",background_color:"#ffffff",theme_color:"#0ea5e9",icons:[{src:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='512' height='512' fill='%230ea5e9'/><text x='50%' y='55%' font-size='280' text-anchor='middle' fill='white'>🏁</text></svg>",sizes:"512x512",type:"image/svg+xml"},{src:"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192'><rect width='192' height='192' fill='%230ea5e9'/><text x='50%' y='58%' font-size='100' text-anchor='middle' fill='white'>🏁</text></svg>",sizes:"192x192",type:"image/svg+xml"}]};
+        const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+        manifestLink.href=URL.createObjectURL(blob);
+        if('serviceWorker' in navigator){
+          const swCode=`const V='sim-2';const C='app-'+V;const R='rt-'+V;const SHELL=['./','./index.html','./app.js','https://cdn.tailwindcss.com'];self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(SHELL)));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>{if(![C,R].includes(k))return caches.delete(k)}))));self.clients.claim()});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin===self.location.origin&&SHELL.some(p=>u.pathname.endsWith(p.replace('./','/')))){e.respondWith(caches.match(e.request).then(c=>c||fetch(e.request)));return}e.respondWith((async()=>{const cache=await caches.open(R);const cached=await cache.match(e.request);try{const net=await fetch(e.request);cache.put(e.request,net.clone());return net}catch{return cached||new Response('Offline',{status:503})}})())});`;
+          const swBlob=new Blob([swCode],{type:'text/javascript'});
+          const swUrl=URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(console.warn);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
